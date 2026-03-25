@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Scrapbook Card Studio</title>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -16,41 +16,63 @@
   --accent-l: #c49a72;
   --muted: #9a7a5a;
   --sidebar-w: 310px;
+  --topbar-h: 52px;
 }
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; overflow: hidden; }
-body { font-family: 'DM Sans', sans-serif; background: var(--paper); color: var(--ink); display: flex; flex-direction: column; }
 
-/* Top bar */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ── Top bar ── */
 .topbar {
   background: #fff;
   border-bottom: 1px solid var(--border);
-  height: 50px;
+  height: var(--topbar-h);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 1.25rem;
+  padding: 0 1rem;
   flex-shrink: 0;
+  z-index: 10;
 }
-.logo { font-family: 'Caveat', cursive; font-size: 1.45rem; font-weight: 700; color: var(--accent); }
+.logo { font-family: 'Caveat', cursive; font-size: 1.4rem; font-weight: 700; color: var(--accent); white-space: nowrap; }
 .logo em { color: var(--ink); font-style: normal; }
-.actions { display: flex; gap: 8px; }
+.actions { display: flex; gap: 6px; align-items: center; }
 .btn {
   display: inline-flex; align-items: center; gap: 5px;
-  font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 500;
-  padding: 6px 14px; border-radius: 8px; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; font-size: 0.78rem; font-weight: 500;
+  padding: 6px 12px; border-radius: 8px; cursor: pointer;
   border: 1.5px solid var(--border); background: transparent; color: var(--ink);
-  transition: background 0.15s, border-color 0.15s;
+  transition: background 0.15s, border-color 0.15s; white-space: nowrap;
 }
 .btn:hover { background: var(--paper); border-color: var(--accent-l); }
 .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
 .btn.primary:hover { background: var(--accent-h); border-color: var(--accent-h); }
-.btn svg { width: 13px; height: 13px; }
+.btn svg { width: 13px; height: 13px; flex-shrink: 0; }
+.btn-label { display: inline; }
 
-/* Layout */
-.workspace { display: flex; flex: 1; overflow: hidden; }
+/* Mobile panel toggle */
+.mobile-toggle {
+  display: none;
+  align-items: center; justify-content: center;
+  width: 34px; height: 34px; border-radius: 8px;
+  border: 1.5px solid var(--border); background: transparent;
+  cursor: pointer; color: var(--ink);
+}
+.mobile-toggle svg { width: 18px; height: 18px; }
 
-/* Sidebar */
+/* ── Desktop layout ── */
+.workspace { display: flex; flex: 1; overflow: hidden; min-height: 0; position: relative; }
+
+/* ── Sidebar ── */
 .sidebar {
   width: var(--sidebar-w);
   background: var(--panel);
@@ -63,8 +85,25 @@ body { font-family: 'DM Sans', sans-serif; background: var(--paper); color: var(
 .sidebar::-webkit-scrollbar { width: 3px; }
 .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
+/* Mobile drawer overlay */
+.drawer-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 99;
+  opacity: 0;
+  transition: opacity 0.25s;
+  pointer-events: none;
+}
+.drawer-overlay.show { opacity: 1; pointer-events: auto; }
+
+/* ── Sections ── */
 .sec { padding: 0.9rem 1.1rem; border-bottom: 1px solid var(--border); }
-.sec-title { font-size: 0.66rem; font-weight: 500; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); margin-bottom: 0.75rem; }
+.sec-title {
+  font-size: 0.64rem; font-weight: 500; text-transform: uppercase;
+  letter-spacing: 1.2px; color: var(--muted); margin-bottom: 0.75rem;
+}
 .field { margin-bottom: 0.65rem; }
 .field:last-child { margin-bottom: 0; }
 .field label { font-size: 0.72rem; font-weight: 500; color: var(--muted); display: block; margin-bottom: 3px; }
@@ -76,7 +115,7 @@ input[type="text"], textarea, select {
   transition: border-color 0.15s;
 }
 input[type="text"]:focus, textarea:focus, select:focus { border-color: var(--accent); }
-textarea { min-height: 54px; }
+textarea { min-height: 50px; }
 
 .row2 { display: flex; gap: 8px; }
 .row2 .field { flex: 1; margin-bottom: 0; }
@@ -85,9 +124,9 @@ textarea { min-height: 54px; }
 .seg { display: flex; border: 1px solid var(--border); border-radius: 7px; overflow: hidden; }
 .seg button {
   flex: 1; border: none; background: transparent;
-  padding: 5px 2px; font-family: 'DM Sans', sans-serif;
-  font-size: 0.73rem; font-weight: 500; color: var(--muted); cursor: pointer;
-  transition: background 0.12s, color 0.12s;
+  padding: 5px 3px; font-family: 'DM Sans', sans-serif;
+  font-size: 0.71rem; font-weight: 500; color: var(--muted); cursor: pointer;
+  transition: background 0.12s, color 0.12s; line-height: 1.3;
 }
 .seg button.on { background: var(--accent); color: #fff; }
 .seg button + button { border-left: 1px solid var(--border); }
@@ -99,10 +138,10 @@ textarea { min-height: 54px; }
   background: var(--border); border-radius: 2px; outline: none;
 }
 .rng input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none; width: 13px; height: 13px;
+  -webkit-appearance: none; width: 14px; height: 14px;
   border-radius: 50%; background: var(--accent); cursor: pointer;
 }
-.rng-val { font-size: 0.75rem; font-weight: 500; color: var(--accent); min-width: 22px; text-align: right; }
+.rng-val { font-size: 0.75rem; font-weight: 500; color: var(--accent); min-width: 24px; text-align: right; }
 
 /* Color swatches */
 .swatches { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
@@ -136,38 +175,125 @@ textarea { min-height: 54px; }
 .pslot .plbl { pointer-events: none; z-index: 1; }
 .pslot .pdel {
   position: absolute; top: 2px; right: 2px;
-  width: 16px; height: 16px; border-radius: 50%;
+  width: 18px; height: 18px; border-radius: 50%;
   background: rgba(0,0,0,0.55); color: #fff; border: none;
-  font-size: 9px; cursor: pointer; display: none;
+  font-size: 10px; cursor: pointer; display: none;
   align-items: center; justify-content: center; z-index: 2;
 }
 .pslot:hover .pdel { display: flex; }
+.pslot:focus-within .pdel { display: flex; }
 
 /* Canvas area */
 .canvas-area {
   flex: 1; display: flex; align-items: center; justify-content: center;
-  padding: 1.5rem; overflow: hidden;
+  padding: 1rem;
+  overflow: hidden;
   background:
     radial-gradient(ellipse at 15% 15%, rgba(180,140,100,0.10) 0%, transparent 50%),
     radial-gradient(ellipse at 85% 85%, rgba(140,100,70,0.08) 0%, transparent 50%),
     var(--paper);
+  min-width: 0;
 }
 .cshell {
   position: relative;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 10px 30px rgba(100,70,40,0.16), 0 30px 70px rgba(100,70,40,0.10);
   border-radius: 4px; overflow: hidden;
-  max-width: 100%; max-height: calc(100vh - 90px);
+  max-width: 100%; max-height: 100%;
 }
-canvas { display: block; max-width: 100%; max-height: calc(100vh - 90px); }
+canvas { display: block; max-width: 100%; max-height: 100%; }
 
 /* Toast */
 .toast {
-  position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(80px);
+  position: fixed; bottom: 5rem; left: 50%; transform: translateX(-50%) translateY(80px);
   background: #2a1a0a; color: #fff; padding: 8px 20px; border-radius: 20px;
   font-size: 0.82rem; transition: transform 0.3s ease;
-  pointer-events: none; z-index: 999;
+  pointer-events: none; z-index: 9999; white-space: nowrap;
 }
 .toast.show { transform: translateX(-50%) translateY(0); }
+
+/* Mobile bottom action bar */
+.mobile-actions {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: #fff;
+  border-top: 1px solid var(--border);
+  padding: 10px 1rem;
+  gap: 8px;
+  z-index: 50;
+}
+.mobile-actions .btn { flex: 1; justify-content: center; }
+
+/* ── MOBILE RESPONSIVE ── */
+@media (max-width: 700px) {
+  :root { --topbar-h: 50px; }
+
+  /* Hide desktop copy/download in topbar; show mobile-toggle */
+  .topbar .actions .btn { display: none; }
+  .mobile-toggle { display: flex; }
+
+  /* Sidebar becomes a drawer from the left */
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    width: min(88vw, 320px);
+    z-index: 100;
+    transform: translateX(-100%);
+    box-shadow: 4px 0 24px rgba(0,0,0,0.18);
+    border-right: none;
+    /* Ensure sidebar sits on top of everything when open */
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  
+  /* Ensure drawer overlay is active on mobile */
+  .drawer-overlay { display: block; }
+
+  /* Sidebar gets a close button strip at top */
+  .sidebar-header {
+    display: flex !important;
+  }
+
+  /* Canvas area fills workspace */
+  .canvas-area {
+    padding: 0.75rem 0.75rem 5.5rem; /* bottom padding for mobile-actions bar */
+    width: 100%; /* Ensure it takes full width */
+  }
+
+  /* Show mobile bottom actions */
+  .mobile-actions { display: flex; }
+
+  /* Tighten sections */
+  .sec { padding: 0.8rem 1rem; }
+  .btn-label { display: none; } /* hide labels in topbar on small */
+}
+
+@media (min-width: 701px) and (max-width: 960px) {
+  :root { --sidebar-w: 270px; }
+  .btn-label { display: none; }
+  .btn { padding: 6px 10px; }
+}
+
+/* Sidebar header (mobile close button) */
+.sidebar-header {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: #fff;
+  flex-shrink: 0;
+}
+.sidebar-header .logo { font-size: 1.2rem; }
+.close-drawer {
+  width: 32px; height: 32px; border-radius: 8px;
+  border: 1.5px solid var(--border); background: transparent;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--muted); font-size: 1.1rem;
+}
+.close-drawer:hover { border-color: var(--accent); color: var(--accent); }
 </style>
 </head>
 <body>
@@ -175,156 +301,209 @@ canvas { display: block; max-width: 100%; max-height: calc(100vh - 90px); }
 <header class="topbar">
   <div class="logo">✦ Scrapbook <em>Studio</em></div>
   <div class="actions">
+    <!-- Mobile: hamburger -->
+    <button class="mobile-toggle" onclick="toggleDrawer()" aria-label="Open settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+    <!-- Desktop: Copy & Download -->
     <button class="btn" onclick="copyCard()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-      Copy
+      <span class="btn-label">Copy</span>
     </button>
     <button class="btn primary" onclick="downloadCard()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Download HD
+      <span class="btn-label">Download HD</span>
     </button>
   </div>
 </header>
 
+<!-- Mobile drawer overlay -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+
 <div class="workspace">
-<aside class="sidebar">
 
-  <!-- Canvas -->
-  <div class="sec">
-    <div class="sec-title">Canvas</div>
-    <div class="field">
-      <label>Aspect Ratio</label>
-      <div class="seg" id="ratio-seg">
-        <button class="on" onclick="setRatio('landscape',this)">4:3</button>
-        <button onclick="setRatio('square',this)">1:1</button>
-        <button onclick="setRatio('portrait',this)">3:4</button>
-        <button onclick="setRatio('wide',this)">16:9</button>
-        <button onclick="setRatio('story',this)">9:16</button>
-      </div>
-    </div>
-  </div>
+  <!-- Sidebar / Drawer -->
+  <aside class="sidebar" id="sidebar">
 
-  <!-- Text -->
-  <div class="sec">
-    <div class="sec-title">Text</div>
-    <div class="field">
-      <label>Headline</label>
-      <textarea id="headline" rows="2" oninput="render()">Happy Birthday Daddy!</textarea>
+    <!-- Mobile-only header inside drawer -->
+    <div class="sidebar-header">
+      <div class="logo">✦ <em>Settings</em></div>
+      <button class="close-drawer" onclick="closeDrawer()">✕</button>
     </div>
-    <div class="field">
-      <label>Headline Size</label>
-      <div class="rng">
-        <input type="range" id="hl-sz" min="20" max="96" value="48" oninput="rv('hl-sz','hl-sz-v');render()">
-        <span class="rng-val" id="hl-sz-v">48</span>
-      </div>
-    </div>
-    <div class="field">
-      <label>Headline Color</label>
-      <div class="swatches" id="hl-sw"></div>
-    </div>
-    <div class="field" style="margin-top:0.6rem">
-      <label>Sub Message</label>
-      <textarea id="sub" rows="2" oninput="render()">Best wishes for you dad!</textarea>
-    </div>
-    <div class="field">
-      <label>Sub Message Size</label>
-      <div class="rng">
-        <input type="range" id="sub-sz" min="12" max="60" value="28" oninput="rv('sub-sz','sub-sz-v');render()">
-        <span class="rng-val" id="sub-sz-v">28</span>
-      </div>
-    </div>
-    <div class="field">
-      <label>Sub Message Color</label>
-      <div class="swatches" id="sub-sw"></div>
-    </div>
-    <div class="field" style="margin-top:0.6rem">
-      <label>Font</label>
-      <div class="seg" id="font-seg">
-        <button class="on" onclick="setFont('caveat',this)">Handwriting</button>
-        <button onclick="setFont('serif',this)">Serif</button>
-        <button onclick="setFont('sans',this)">Sans</button>
-      </div>
-    </div>
-  </div>
 
-  <!-- Background -->
-  <div class="sec">
-    <div class="sec-title">Background</div>
-    <div class="field">
-      <label>Theme</label>
-      <div class="seg" id="bg-seg">
-        <button class="on" onclick="setBg('warm',this)">Warm</button>
-        <button onclick="setBg('cool',this)">Cool</button>
-        <button onclick="setBg('rose',this)">Rose</button>
-        <button onclick="setBg('sage',this)">Sage</button>
-        <button onclick="setBg('dark',this)">Dark</button>
+    <!-- Canvas -->
+    <div class="sec">
+      <div class="sec-title">Canvas</div>
+      <div class="field">
+        <label>Aspect Ratio</label>
+        <div class="seg" id="ratio-seg">
+          <button class="on" onclick="setRatio('landscape',this)">4:3</button>
+          <button onclick="setRatio('square',this)">1:1</button>
+          <button onclick="setRatio('portrait',this)">3:4</button>
+          <button onclick="setRatio('wide',this)">16:9</button>
+          <button onclick="setRatio('story',this)">9:16</button>
+        </div>
       </div>
     </div>
-    <div class="field">
-      <label>Decorations</label>
-      <div class="seg" id="deco-seg">
-        <button class="on" onclick="setDeco('full',this)">Full</button>
-        <button onclick="setDeco('minimal',this)">Minimal</button>
-        <button onclick="setDeco('none',this)">None</button>
-      </div>
-    </div>
-  </div>
 
-  <!-- Photos -->
-  <div class="sec">
-    <div class="sec-title">Photos</div>
-    <div class="field">
-      <label>Number of Photos</label>
-      <div class="rng">
-        <input type="range" id="pcount" min="1" max="8" value="6" oninput="rv('pcount','pcount-v');rebuildGrid()">
-        <span class="rng-val" id="pcount-v">6</span>
+    <!-- Text -->
+    <div class="sec">
+      <div class="sec-title">Text</div>
+      <div class="field">
+        <label>Headline</label>
+        <textarea id="headline" rows="2" oninput="render()">Happy Birthday Daddy!</textarea>
+      </div>
+      <div class="field">
+        <label>Headline Size</label>
+        <div class="rng">
+          <input type="range" id="hl-sz" min="20" max="96" value="48" oninput="rv('hl-sz','hl-sz-v');render()">
+          <span class="rng-val" id="hl-sz-v">48</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Headline Color</label>
+        <div class="swatches" id="hl-sw"></div>
+      </div>
+      <div class="field" style="margin-top:0.6rem">
+        <label>Sub Message</label>
+        <textarea id="sub" rows="2" oninput="render()">Best wishes for you dad!</textarea>
+      </div>
+      <div class="field">
+        <label>Sub Message Size</label>
+        <div class="rng">
+          <input type="range" id="sub-sz" min="12" max="60" value="28" oninput="rv('sub-sz','sub-sz-v');render()">
+          <span class="rng-val" id="sub-sz-v">28</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Sub Message Color</label>
+        <div class="swatches" id="sub-sw"></div>
+      </div>
+      <div class="field" style="margin-top:0.6rem">
+        <label>Font</label>
+        <div class="seg" id="font-seg">
+          <button class="on" onclick="setFont('caveat',this)">Handwriting</button>
+          <button onclick="setFont('serif',this)">Serif</button>
+          <button onclick="setFont('sans',this)">Sans</button>
+        </div>
       </div>
     </div>
-    <div class="field">
-      <label>Max Rotation (°)</label>
-      <div class="rng">
-        <input type="range" id="rot" min="0" max="15" value="6" oninput="rv('rot','rot-v');render()">
-        <span class="rng-val" id="rot-v">6</span>
-      </div>
-    </div>
-    <div class="field">
-      <label>Shadow Depth</label>
-      <div class="rng">
-        <input type="range" id="shad" min="0" max="24" value="10" oninput="rv('shad','shad-v');render()">
-        <span class="rng-val" id="shad-v">10</span>
-      </div>
-    </div>
-    <div class="field">
-      <div class="pgrid" id="pgrid"></div>
-    </div>
-  </div>
 
-  <!-- Export -->
-  <div class="sec">
-    <div class="sec-title">Export Quality</div>
-    <div class="field">
-      <label>Resolution Scale</label>
-      <div class="seg" id="scale-seg">
-        <button onclick="setScale(1,this)">1×</button>
-        <button class="on" onclick="setScale(2,this)">2× HD</button>
-        <button onclick="setScale(3,this)">3×</button>
-        <button onclick="setScale(4,this)">4× Ultra</button>
+    <!-- Background -->
+    <div class="sec">
+      <div class="sec-title">Background</div>
+      <div class="field">
+        <label>Theme</label>
+        <div class="seg" id="bg-seg">
+          <button class="on" onclick="setBg('warm',this)">Warm</button>
+          <button onclick="setBg('cool',this)">Cool</button>
+          <button onclick="setBg('rose',this)">Rose</button>
+          <button onclick="setBg('sage',this)">Sage</button>
+          <button onclick="setBg('dark',this)">Dark</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Decorations</label>
+        <div class="seg" id="deco-seg">
+          <button class="on" onclick="setDeco('full',this)">Full</button>
+          <button onclick="setDeco('minimal',this)">Minimal</button>
+          <button onclick="setDeco('none',this)">None</button>
+        </div>
       </div>
     </div>
-  </div>
 
-</aside>
+    <!-- Photos -->
+    <div class="sec">
+      <div class="sec-title">Photos</div>
+      <div class="field">
+        <label>Number of Photos</label>
+        <div class="rng">
+          <input type="range" id="pcount" min="1" max="8" value="6" oninput="rv('pcount','pcount-v');rebuildGrid()">
+          <span class="rng-val" id="pcount-v">6</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Max Rotation (°)</label>
+        <div class="rng">
+          <input type="range" id="rot" min="0" max="15" value="6" oninput="rv('rot','rot-v');render()">
+          <span class="rng-val" id="rot-v">6</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Shadow Depth</label>
+        <div class="rng">
+          <input type="range" id="shad" min="0" max="24" value="10" oninput="rv('shad','shad-v');render()">
+          <span class="rng-val" id="shad-v">10</span>
+        </div>
+      </div>
+      <div class="field">
+        <div class="pgrid" id="pgrid"></div>
+      </div>
+    </div>
 
-<main class="canvas-area">
-  <div class="cshell" id="cshell">
-    <canvas id="card"></canvas>
-  </div>
-</main>
+    <!-- Export -->
+    <div class="sec">
+      <div class="sec-title">Export Quality</div>
+      <div class="field">
+        <label>Resolution Scale</label>
+        <div class="seg" id="scale-seg">
+          <button onclick="setScale(1,this)">1×</button>
+          <button class="on" onclick="setScale(2,this)">2× HD</button>
+          <button onclick="setScale(3,this)">3×</button>
+          <button onclick="setScale(4,this)">4× Ultra</button>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <main class="canvas-area">
+    <div class="cshell" id="cshell">
+      <canvas id="card"></canvas>
+    </div>
+  </main>
+</div>
+
+<!-- Mobile bottom action bar -->
+<div class="mobile-actions" id="mobile-actions">
+  <button class="btn" onclick="copyCard()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+    Copy
+  </button>
+  <button class="btn primary" onclick="downloadCard()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Download HD
+  </button>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
+/* ─── Drawer ─── */
+function toggleDrawer() {
+  const s = document.getElementById('sidebar');
+  const o = document.getElementById('drawer-overlay');
+  const isOpen = s.classList.contains('open');
+  
+  if (isOpen) { 
+    closeDrawer(); 
+  } else { 
+    s.classList.add('open'); 
+    o.classList.add('show'); 
+    document.body.style.overflow='hidden'; 
+  }
+}
+
+function closeDrawer() {
+  const s = document.getElementById('sidebar');
+  const o = document.getElementById('drawer-overlay');
+  s.classList.remove('open');
+  o.classList.remove('show');
+  document.body.style.overflow='';
+}
+
 /* ─── State ─── */
 const S = {
   ratio: 'landscape', bg: 'warm', font: 'caveat', deco: 'full',
@@ -350,7 +529,6 @@ const FONT_MAP = {
 
 const SWATCHES = ['#2a1a0a','#ffffff','#8b5e3c','#c49a72','#405878','#607848','#804040','#303030'];
 
-/* photo state */
 let photos = new Array(6).fill(null);
 let imgs   = new Array(6).fill(null);
 
@@ -366,7 +544,7 @@ function segOn(segId, btn) {
   btn.classList.add('on');
 }
 
-function setRatio(r,b) { S.ratio=r; segOn('ratio-seg',b); resizeCanvas(); render(); }
+function setRatio(r,b) { S.ratio=r; segOn('ratio-seg',b); resizeCanvas(); render(); closeDrawer(); }
 function setFont(f,b)   { S.font=f;  segOn('font-seg',b);  render(); }
 function setBg(bg,b)    { S.bg=bg;   segOn('bg-seg',b);    render(); }
 function setDeco(d,b)   { S.deco=d;  segOn('deco-seg',b);  render(); }
@@ -375,6 +553,7 @@ function setScale(s,b)  { S.scale=s; segOn('scale-seg',b); }
 /* ─── Swatches ─── */
 function buildSwatches(containerId, key) {
   const el = document.getElementById(containerId);
+  el.innerHTML = ''; // Clear existing
   SWATCHES.forEach(hex => {
     const sw = document.createElement('div');
     sw.className = 'swatch' + (S[key]===hex?' on':'');
@@ -494,7 +673,6 @@ function drawBg(ctx,W,H,pal) {
   ctx.fillStyle=pal.bg; ctx.fillRect(0,0,W,H);
   if(S.deco==='none')return;
 
-  // Grid
   ctx.strokeStyle=pal.grid; ctx.lineWidth=0.5;
   const gs=Math.round(W/32);
   for(let x=0;x<W;x+=gs){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
@@ -502,7 +680,6 @@ function drawBg(ctx,W,H,pal) {
   if(S.deco==='minimal')return;
 
   ctx.save();
-  // Torn paper top-left strip
   ctx.fillStyle=pal.tear; ctx.globalAlpha=0.50;
   ctx.beginPath();
   ctx.moveTo(0,0); ctx.lineTo(W*0.36,0);
@@ -510,7 +687,6 @@ function drawBg(ctx,W,H,pal) {
   ctx.lineTo(W*0.28,H*0.21); ctx.lineTo(W*0.31,H*0.29);
   ctx.lineTo(0,H*0.29); ctx.closePath(); ctx.fill();
 
-  // Torn paper bottom-right
   ctx.fillStyle=pal.blob; ctx.globalAlpha=0.28;
   ctx.beginPath();
   ctx.moveTo(W,H); ctx.lineTo(W*0.63,H);
@@ -518,7 +694,6 @@ function drawBg(ctx,W,H,pal) {
   ctx.lineTo(W*0.66,H*0.71); ctx.lineTo(W,H*0.67);
   ctx.closePath(); ctx.fill();
 
-  // Ink blob center-right
   ctx.globalAlpha=0.12; ctx.fillStyle=pal.blob;
   ctx.beginPath(); ctx.ellipse(W*0.62,H*0.46,W*0.13,H*0.17,0.4,0,Math.PI*2); ctx.fill();
   ctx.globalAlpha=0.07;
@@ -600,7 +775,6 @@ function drawText(ctx,W,H,ff) {
   const PAD=W*0.04;
   const maxW=W*0.26;
 
-  // Headline — top-left, clamped inside card
   ctx.save();
   ctx.translate(PAD, PAD);
   ctx.rotate(-0.022);
@@ -612,7 +786,6 @@ function drawText(ctx,W,H,ff) {
   for(const l of hlLines){ctx.fillText(l,0,ly);ly+=hlSz*1.15;}
   ctx.restore();
 
-  // Sub message — bottom-right, clamped inside card
   ctx.save();
   ctx.font=`italic ${smSz}px ${ff}`;
   ctx.textAlign='left'; ctx.textBaseline='top';
@@ -642,7 +815,7 @@ function render() {
   drawText(ctx,W,H,ff);
 }
 
-/* ─── High-res draw onto an offscreen ctx ─── */
+/* ─── Download ─── */
 function renderTo(ctx,W,H) {
   const pal=PALETTES[S.bg];
   const ff=FONT_MAP[S.font];
@@ -650,7 +823,6 @@ function renderTo(ctx,W,H) {
   const maxRot=gi('rot');
   const BW=canvas.width, BH=canvas.height;
   const pos=computePositions(n,BW,BH,maxRot);
-
   drawBg(ctx,BW,BH,pal);
   drawStars(ctx,BW,BH,pal.star);
   for(let i=0;i<n;i++) drawPolaroid(ctx,imgs[i]||null,pos[i]);
@@ -696,7 +868,6 @@ window.addEventListener('load',()=>{
   buildSwatches('sub-sw','subColor');
   resizeCanvas();
   rebuildGrid();
-  // live re-render on all range inputs
   document.querySelectorAll('input[type=range]').forEach(r=>r.addEventListener('input',()=>render()));
 });
 </script>
