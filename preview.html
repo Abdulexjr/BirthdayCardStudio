@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Birthday Card Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Poppins:wght@300;400;500;600&family=Fredoka:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0f12;
+      --fg: #fafafa;
+      --muted: #6b7280;
+      --accent: #f97316;
+      --card: #1a1a1f;
+      --border: #2a2a32;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Background atmosphere */
+    .bg-atmosphere {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .bg-atmosphere::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: 
+        radial-gradient(ellipse at 20% 20%, rgba(249, 115, 22, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(168, 85, 247, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(20, 184, 166, 0.04) 0%, transparent 60%);
+      animation: atmosphereMove 20s ease-in-out infinite;
+    }
+
+    @keyframes atmosphereMove {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      50% { transform: translate(-2%, -2%) rotate(1deg); }
+    }
+
+    /* Noise overlay */
+    .noise-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    }
+
+    .main-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Template selector */
+    .template-btn {
+      position: relative;
+      padding: 12px 20px;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      background: var(--card);
+      color: var(--fg);
+      font-family: 'Poppins', sans-serif;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+    }
+
+    .template-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--accent), #a855f7);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .template-btn:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .template-btn.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
+    }
+
+    .template-btn.active::before {
+      opacity: 0.15;
+    }
+
+    .template-btn span {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Form inputs */
+    .input-field {
+      width: 100%;
+      padding: 14px 18px;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      background: var(--card);
+      color: var(--fg);
+      font-family: 'Poppins', sans-serif;
+      font-size: 15px;
+      transition: all 0.3s;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.15);
+    }
+
+    .input-field::placeholder {
+      color: var(--muted);
+    }
+
+    textarea.input-field {
+      resize: none;
+      min-height: 100px;
+    }
+
+    /* Generate button */
+    .generate-btn {
+      position: relative;
+      padding: 16px 32px;
+      border-radius: 14px;
+      border: none;
+      background: linear-gradient(135deg, #f97316, #ea580c);
+      color: white;
+      font-family: 'Poppins', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+    }
+
+    .generate-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, #fb923c, #f97316);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .generate-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(249, 115, 22, 0.4);
+    }
+
+    .generate-btn:hover::before {
+      opacity: 1;
+    }
+
+    .generate-btn:active {
+      transform: translateY(-1px);
+    }
+
+    .generate-btn span {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Download button */
+    .download-btn {
+      padding: 14px 28px;
+      border-radius: 12px;
+      border: 2px solid #14b8a6;
+      background: transparent;
+      color: #14b8a6;
+      font-family: 'Poppins', sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .download-btn:hover {
+      background: #14b8a6;
+      color: var(--bg);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(20, 184, 166, 0.3);
+    }
+
+    /* Card preview area */
+    .preview-container {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+      min-height: 500px;
+    }
+
+    /* ============================================
+       TEMPLATE 1: ELEGANT FLORAL
+    ============================================ */
+    .template-elegant {
+      width: 400px;
+      min-height: 500px;
+      position: relative;
+      padding: 40px 35px;
+      border-radius: 24px;
+      background: linear-gradient(165deg, #fef7f0 0%, #fdf2e9 50%, #f9e8d9 100%);
+      color: #2d2a26;
+      overflow: hidden;
+      box-shadow: 
+        0 25px 50px -12px rgba(0, 0, 0, 0.25),
+        0 0 0 1px rgba(255, 255, 255, 0.1);
+    }
+
+    .template-elegant::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: linear-gradient(90deg, #d4a574, #c9956c, #b8845c);
+    }
+
+    .elegant-border {
+      position: absolute;
+      inset: 12px;
+      border: 1px solid rgba(180, 140, 100, 0.3);
+      border-radius: 16px;
+      pointer-events: none;
+    }
+
+    .elegant-corner {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      opacity: 0.4;
+    }
+
+    .elegant-corner-tl {
+      top: 20px;
+      left: 20px;
+      border-top: 2px solid #b8845c;
+      border-left: 2px solid #b8845c;
+      border-radius: 8px 0 0 0;
+    }
+
+    .elegant-corner-tr {
+      top: 20px;
+      right: 20px;
+      border-top: 2px solid #b8845c;
+      border-right: 2px solid #b8845c;
+      border-radius: 0 8px 0 0;
+    }
+
+    .elegant-corner-bl {
+      bottom: 20px;
+      left: 20px;
+      border-bottom: 2px solid #b8845c;
+      border-left: 2px solid #b8845c;
+      border-radius: 0 0 0 8px;
+    }
+
+    .elegant-corner-br {
+      bottom: 20px;
+      right: 20px;
+      border-bottom: 2px solid #b8845c;
+      border-right: 2px solid #b8845c;
+      border-radius: 0 0 8px 0;
+    }
+
+    .elegant-decor {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.15;
+    }
+
+    .elegant-decor-1 {
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, #d4a574, transparent);
+      top: -80px;
+      right: -80px;
+    }
+
+    .elegant-decor-2 {
+      width: 150px;
+      height: 150px;
+      background: radial-gradient(circle, #c9956c, transparent);
+      bottom: -50px;
+      left: -50px;
+    }
+
+    .elegant-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 32px;
+      font-weight: 600;
+      color: #8b5a2b;
+      text-align: center;
+      margin-bottom: 8px;
+      line-height: 1.2;
+    }
+
+    .elegant-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 38px;
+      font-weight: 700;
+      color: #5d3a1a;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .elegant-divider {
+      width: 80px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #b8845c, transparent);
+      margin: 0 auto 20px;
+    }
+
+    .elegant-message {
+      font-family: 'Poppins', sans-serif;
+      font-size: 15px;
+      font-weight: 300;
+      color: #6b5344;
+      text-align: center;
+      line-height: 1.7;
+      margin-bottom: 25px;
+    }
+
+    .elegant-photos {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .elegant-photo {
+      aspect-ratio: 1;
+      border-radius: 12px;
+      object-fit: cover;
+      border: 3px solid rgba(255, 255, 255, 0.8);
+      box-shadow: 0 4px 15px rgba(139, 90, 43, 0.15);
+    }
+
+    /* ============================================
+       TEMPLATE 2: FUN CONFETTI
+    ============================================ */
+    .template-fun {
+      width: 400px;
+      min-height: 500px;
+      position: relative;
+      padding: 40px 30px;
+      border-radius: 20px;
+      background: linear-gradient(180deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+      color: white;
+      overflow: hidden;
+      box-shadow: 
+        0 25px 50px -12px rgba(0, 0, 0, 0.4),
+        inset 0 0 100px rgba(255, 255, 255, 0.05);
+    }
+
+    .fun-confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      animation: confettiFloat 3s ease-in-out infinite;
+    }
+
+    @keyframes confettiFloat {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-10px) rotate(180deg); }
+    }
+
+    .fun-sparkle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: white;
+      border-radius: 50%;
+      animation: sparkle 2s ease-in-out infinite;
+    }
+
+    @keyframes sparkle {
+      0%, 100% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.5); }
+    }
+
+    .fun-balloon {
+      position: absolute;
+      font-size: 32px;
+      animation: balloonFloat 4s ease-in-out infinite;
+    }
+
+    @keyframes balloonFloat {
+      0%, 100% { transform: translateY(0) rotate(-5deg); }
+      50% { transform: translateY(-15px) rotate(5deg); }
+    }
+
+    .fun-title {
+      font-family: 'Fredoka', sans-serif;
+      font-size: 28px;
+      font-weight: 500;
+      text-align: center;
+      margin-bottom: 6px;
+      color: #fde047;
+      text-shadow: 0 2px 10px rgba(253, 224, 71, 0.3);
+    }
+
+    .fun-name {
+      font-family: 'Fredoka', sans-serif;
+      font-size: 42px;
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 25px;
+      color: white;
+      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .fun-message {
+      font-family: 'Poppins', sans-serif;
+      font-size: 15px;
+      font-weight: 400;
+      text-align: center;
+      line-height: 1.7;
+      color: rgba(255, 255, 255, 0.9);
+      margin-bottom: 25px;
+    }
+
+    .fun-photos {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .fun-photo {
+      aspect-ratio: 1;
+      border-radius: 16px;
+      object-fit: cover;
+      border: 3px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    /* ============================================
+       TEMPLATE 3: BOLD MODERN
+    ============================================ */
+    .template-modern {
+      width: 400px;
+      min-height: 500px;
+      position: relative;
+      padding: 0;
+      border-radius: 0;
+      background: #0a0a0a;
+      color: white;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    .modern-header {
+      position: relative;
+      padding: 30px;
+      background: linear-gradient(135deg, #f97316, #ea580c);
+      clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
+    }
+
+    .modern-stripe {
+      position: absolute;
+      height: 4px;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .modern-stripe-1 {
+      top: 15px;
+      left: 0;
+      width: 60%;
+    }
+
+    .modern-stripe-2 {
+      top: 25px;
+      left: 0;
+      width: 40%;
+    }
+
+    .modern-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 20px;
+      font-weight: 500;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+      color: rgba(0, 0, 0, 0.6);
+    }
+
+    .modern-name {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 48px;
+      font-weight: 700;
+      line-height: 1;
+      color: white;
+    }
+
+    .modern-content {
+      padding: 20px 30px 30px;
+    }
+
+    .modern-message {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 1.7;
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 25px;
+      border-left: 3px solid #f97316;
+      padding-left: 15px;
+    }
+
+    .modern-photos {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .modern-photo {
+      aspect-ratio: 1;
+      object-fit: cover;
+      filter: grayscale(20%) contrast(1.1);
+      transition: filter 0.3s;
+    }
+
+    .modern-photo:first-child {
+      border-radius: 12px 0 0 12px;
+    }
+
+    .modern-photo:last-child {
+      border-radius: 0 12px 12px 0;
+    }
+
+    .modern-footer {
+      margin-top: 25px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modern-year {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 48px;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.1);
+      line-height: 1;
+    }
+
+    .modern-badge {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 8px 16px;
+      border: 2px solid #f97316;
+      color: #f97316;
+    }
+
+    /* Animations */
+    .fade-in {
+      animation: fadeIn 0.6s ease-out forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .stagger-1 { animation-delay: 0.1s; }
+    .stagger-2 { animation-delay: 0.2s; }
+    .stagger-3 { animation-delay: 0.3s; }
+    .stagger-4 { animation-delay: 0.4s; }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .template-elegant,
+      .template-fun,
+      .template-modern {
+        width: 100%;
+        max-width: 360px;
+      }
+
+      .preview-container {
+        padding: 20px;
+      }
+    }
+
+    /* Photo upload styling */
+    .photo-upload-area {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .photo-slot {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: 12px;
+      border: 2px dashed var(--border);
+      background: var(--card);
+      cursor: pointer;
+      transition: all 0.3s;
+      overflow: hidden;
+    }
+
+    .photo-slot:hover {
+      border-color: var(--accent);
+      background: rgba(249, 115, 22, 0.05);
+    }
+
+    .photo-slot img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .photo-slot-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .photo-slot-placeholder svg {
+      width: 24px;
+      height: 24px;
+      margin-bottom: 4px;
+      opacity: 0.5;
+    }
+
+    /* Notification */
+    .notification {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      padding: 14px 28px;
+      border-radius: 12px;
+      background: #14b8a6;
+      color: white;
+      font-weight: 500;
+      z-index: 100;
+      opacity: 0;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .notification.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-atmosphere"></div>
+  <div class="noise-overlay"></div>
+
+  <div class="main-content min-h-screen py-8 px-4">
+    <div class="max-w-6xl mx-auto">
+      
+      <!-- Header -->
+      <header class="text-center mb-10 fade-in">
+        <h1 class="text-4xl md:text-5xl font-bold mb-3" style="font-family: 'Space Grotesk', sans-serif;">
+          Birthday Card <span style="color: var(--accent);">Studio</span>
+        </h1>
+        <p class="text-lg" style="color: var(--muted);">Create stunning, personalized cards in seconds</p>
+      </header>
+
+      <div class="grid lg:grid-cols-2 gap-8 items-start">
+        
+        <!-- Left: Controls -->
+        <div class="space-y-6">
+          
+          <!-- Template Selector -->
+          <div class="fade-in stagger-1">
+            <label class="block text-sm font-medium mb-3" style="color: var(--muted);">Choose Template</label>
+            <div class="flex flex-wrap gap-3">
+              <button class="template-btn active" data-template="elegant" onclick="selectTemplate('elegant')">
+                <span>Elegant</span>
+              </button>
+              <button class="template-btn" data-template="fun" onclick="selectTemplate('fun')">
+                <span>Fun Party</span>
+              </button>
+              <button class="template-btn" data-template="modern" onclick="selectTemplate('modern')">
+                <span>Bold Modern</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Name Input -->
+          <div class="fade-in stagger-2">
+            <label class="block text-sm font-medium mb-2" style="color: var(--muted);">Recipient Name</label>
+            <input type="text" id="nameInput" class="input-field" placeholder="Enter name..." value="Sarah">
+          </div>
+
+          <!-- Message Input -->
+          <div class="fade-in stagger-3">
+            <label class="block text-sm font-medium mb-2" style="color: var(--muted);">Personal Message</label>
+            <textarea id="messageInput" class="input-field" placeholder="Write your heartfelt message...">Wishing you the most wonderful birthday filled with joy, laughter, and all your favorite things. May this year bring you endless happiness!</textarea>
+          </div>
+
+          <!-- Photo Upload -->
+          <div class="fade-in stagger-4">
+            <label class="block text-sm font-medium mb-3" style="color: var(--muted);">Add Photos (optional)</label>
+            <div class="photo-upload-area">
+              <div class="photo-slot" onclick="triggerUpload(0)" id="slot-0">
+                <div class="photo-slot-placeholder">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span>Add</span>
+                </div>
+              </div>
+              <div class="photo-slot" onclick="triggerUpload(1)" id="slot-1">
+                <div class="photo-slot-placeholder">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span>Add</span>
+                </div>
+              </div>
+              <div class="photo-slot" onclick="triggerUpload(2)" id="slot-2">
+                <div class="photo-slot-placeholder">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span>Add</span>
+                </div>
+              </div>
+              <div class="photo-slot" onclick="triggerUpload(3)" id="slot-3">
+                <div class="photo-slot-placeholder">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span>Add</span>
+                </div>
+              </div>
+            </div>
+            <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+          </div>
+
+          <!-- Actions -->
+          <div class="flex flex-wrap gap-4 pt-4">
+            <button class="generate-btn" onclick="generateCard()">
+              <span>Generate Card</span>
+            </button>
+            <button class="download-btn" onclick="downloadCard()">
+              Download PNG
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Right: Preview -->
+        <div class="preview-container rounded-2xl" style="background: linear-gradient(135deg, rgba(26,26,31,0.8), rgba(15,15,18,0.9)); border: 1px solid var(--border);">
+          
+          <!-- Template 1: Elegant -->
+          <div id="cardElegant" class="template-elegant" style="display: none;">
+            <div class="elegant-border"></div>
+            <div class="elegant-corner elegant-corner-tl"></div>
+            <div class="elegant-corner elegant-corner-tr"></div>
+            <div class="elegant-corner elegant-corner-bl"></div>
+            <div class="elegant-corner elegant-corner-br"></div>
+            <div class="elegant-decor elegant-decor-1"></div>
+            <div class="elegant-decor elegant-decor-2"></div>
+            <h2 class="elegant-title">Happy Birthday</h2>
+            <div class="elegant-name" id="elegantName">Sarah</div>
+            <div class="elegant-divider"></div>
+            <p class="elegant-message" id="elegantMessage">Wishing you the most wonderful birthday filled with joy, laughter, and all your favorite things.</p>
+            <div class="elegant-photos" id="elegantPhotos">
+              <!-- Photos injected here -->
+            </div>
+          </div>
+
+          <!-- Template 2: Fun -->
+          <div id="cardFun" class="template-fun" style="display: none;">
+            <!-- Confetti elements -->
+            <div class="fun-balloon" style="top: 20px; left: 20px; animation-delay: 0s;">🎈</div>
+            <div class="fun-balloon" style="top: 40px; right: 25px; animation-delay: 0.5s;">🎈</div>
+            <div class="fun-balloon" style="bottom: 60px; left: 15px; animation-delay: 1s;">🎈</div>
+            <!-- Confetti and sparkles will be added by JS -->
+            <h2 class="fun-title">Happy Birthday</h2>
+            <div class="fun-name" id="funName">Sarah</div>
+            <p class="fun-message" id="funMessage">Wishing you the most wonderful birthday filled with joy, laughter, and all your favorite things.</p>
+            <div class="fun-photos" id="funPhotos">
+              <!-- Photos injected here -->
+            </div>
+          </div>
+
+          <!-- Template 3: Modern -->
+          <div id="cardModern" class="template-modern" style="display: none;">
+            <div class="modern-header">
+              <div class="modern-stripe modern-stripe-1"></div>
+              <div class="modern-stripe modern-stripe-2"></div>
+              <div class="modern-title">Happy Birthday</div>
+              <div class="modern-name" id="modernName">Sarah</div>
+            </div>
+            <div class="modern-content">
+              <p class="modern-message" id="modernMessage">Wishing you the most wonderful birthday filled with joy, laughter, and all your favorite things.</p>
+              <div class="modern-photos" id="modernPhotos">
+                <!-- Photos injected here -->
+              </div>
+              <div class="modern-footer">
+                <div class="modern-year" id="modernYear">2025</div>
+                <div class="modern-badge">Celebrate</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <div class="notification" id="notification">Card downloaded successfully!</div>
+
+  <script>
+    // State
+    let currentTemplate = 'elegant';
+    let uploadedPhotos = [null, null, null, null];
+    let currentSlot = 0;
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      generateCard();
+    });
+
+    // Template selection
+    function selectTemplate(template) {
+      currentTemplate = template;
+      
+      // Update buttons
+      document.querySelectorAll('.template-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.template === template) {
+          btn.classList.add('active');
+        }
+      });
+
+      // Update preview
+      generateCard();
+    }
+
+    // Generate card content
+    function generateCard() {
+      const name = document.getElementById('nameInput').value || 'Friend';
+      const message = document.getElementById('messageInput').value || 'Wishing you a wonderful birthday!';
+      const year = new Date().getFullYear();
+
+      // Hide all templates
+      document.getElementById('cardElegant').style.display = 'none';
+      document.getElementById('cardFun').style.display = 'none';
+      document.getElementById('cardModern').style.display = 'none';
+
+      // Generate photo HTML
+      const photoCount = uploadedPhotos.filter(p => p !== null).length;
+      
+      // Show selected template
+      if (currentTemplate === 'elegant') {
+        document.getElementById('cardElegant').style.display = 'block';
+        document.getElementById('elegantName').textContent = name;
+        document.getElementById('elegantMessage').textContent = message;
+        document.getElementById('elegantPhotos').innerHTML = generatePhotoHTML('elegant', photoCount);
+      } else if (currentTemplate === 'fun') {
+        document.getElementById('cardFun').style.display = 'block';
+        document.getElementById('funName').textContent = name;
+        document.getElementById('funMessage').textContent = message;
+        document.getElementById('funPhotos').innerHTML = generatePhotoHTML('fun', photoCount);
+        addFunDecorations();
+      } else if (currentTemplate === 'modern') {
+        document.getElementById('cardModern').style.display = 'block';
+        document.getElementById('modernName').textContent = name;
+        document.getElementById('modernMessage').textContent = message;
+        document.getElementById('modernYear').textContent = year;
+        document.getElementById('modernPhotos').innerHTML = generatePhotoHTML('modern', photoCount);
+      }
+    }
+
+    // Generate photo HTML based on template
+    function generatePhotoHTML(template, count) {
+      const photos = uploadedPhotos.filter(p => p !== null);
+      
+      if (photos.length === 0) {
+        return '';
+      }
+
+      let html = '';
+      
+      if (template === 'elegant') {
+        photos.forEach((photo, i) => {
+          if (i < 4) {
+            html += `<img src="${photo}" alt="Photo ${i+1}" class="elegant-photo">`;
+          }
+        });
+      } else if (template === 'fun') {
+        photos.forEach((photo, i) => {
+          if (i < 4) {
+            html += `<img src="${photo}" alt="Photo ${i+1}" class="fun-photo">`;
+          }
+        });
+      } else if (template === 'modern') {
+        photos.forEach((photo, i) => {
+          if (i < 3) {
+            html += `<img src="${photo}" alt="Photo ${i+1}" class="modern-photo">`;
+          }
+        });
+      }
+
+      return html;
+    }
+
+    // Add fun decorations (confetti and sparkles)
+    function addFunDecorations() {
+      const card = document.getElementById('cardFun');
+      
+      // Remove existing decorations
+      card.querySelectorAll('.fun-confetti, .fun-sparkle').forEach(el => el.remove());
+
+      // Confetti colors
+      const confettiColors = ['#fde047', '#f472b6', '#34d399', '#60a5fa', '#f97316', '#a78bfa'];
+      
+      // Add confetti
+      for (let i = 0; i < 20; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'fun-confetti';
+        confetti.style.left = Math.random() * 100 + '%';
+        confetti.style.top = Math.random() * 100 + '%';
+        confetti.style.background = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+        confetti.style.animationDelay = Math.random() * 2 + 's';
+        confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+        card.appendChild(confetti);
+      }
+
+      // Add sparkles
+      for (let i = 0; i < 15; i++) {
+        const sparkle = document.createElement('div');
+        sparkle.className = 'fun-sparkle';
+        sparkle.style.left = Math.random() * 100 + '%';
+        sparkle.style.top = Math.random() * 100 + '%';
+        sparkle.style.animationDelay = Math.random() * 2 + 's';
+        card.appendChild(sparkle);
+      }
+    }
+
+    // Photo upload handling
+    function triggerUpload(slot) {
+      currentSlot = slot;
+      document.getElementById('fileInput').click();
+    }
+
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          uploadedPhotos[currentSlot] = e.target.result;
+          
+          // Update slot UI
+          const slot = document.getElementById(`slot-${currentSlot}`);
+          slot.innerHTML = `<img src="${e.target.result}" alt="Uploaded photo">`;
+          
+          // Regenerate card
+          generateCard();
+        };
+        reader.readAsDataURL(file);
+      }
+      // Reset input
+      event.target.value = '';
+    }
+
+    // Download card as PNG
+    async function downloadCard() {
+      let cardElement;
+      
+      if (currentTemplate === 'elegant') {
+        cardElement = document.getElementById('cardElegant');
+      } else if (currentTemplate === 'fun') {
+        cardElement = document.getElementById('cardFun');
+      } else {
+        cardElement = document.getElementById('cardModern');
+      }
+
+      try {
+        const canvas = await html2canvas(cardElement, {
+          scale: 2,
+          backgroundColor: null,
+          useCORS: true,
+          logging: false
+        });
+
+        const link = document.createElement('a');
+        link.download = `birthday-card-${currentTemplate}-${Date.now()}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+
+        // Show notification
+        showNotification('Card downloaded successfully!');
+      } catch (error) {
+        console.error('Download failed:', error);
+        showNotification('Download failed. Please try again.');
+      }
+    }
+
+    // Show notification
+    function showNotification(message) {
+      const notification = document.getElementById('notification');
+      notification.textContent = message;
+      notification.classList.add('show');
+      
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, 3000);
+    }
+
+    // Live preview updates
+    document.getElementById('nameInput').addEventListener('input', generateCard);
+    document.getElementById('messageInput').addEventListener('input', generateCard);
+  </script>
+</body>
+</html>
